@@ -9,6 +9,7 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
 const subjectRoutes = require('./routes/subjects');
 const planRoutes = require('./routes/plans');
+const arisRoutes = require('./routes/aris');
 
 // Connect to database
 connectDB();
@@ -25,6 +26,7 @@ app.use(morgan('dev'));
 app.use('/api/auth', authRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/plans', planRoutes);
+app.use('/api/aris', arisRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
