@@ -40,6 +40,21 @@ class AdaptationData(BaseModel):
     user_data: dict
     behavior_data: dict
 
+class BurnoutData(BaseModel):
+    stress_level: int
+    low_sleep_penalty: int
+    missed_tasks_ratio: float
+
+class OptimizationInput(BaseModel):
+    sorted_tasks: List[dict]
+    burnout_data: dict
+    available_days: Optional[int] = 7
+    max_daily_hours: Optional[int] = 6
+
+class CoachInput(BaseModel):
+    stress_level: int
+    days_to_exam: int
+
 @app.get("/")
 async def root():
     return {"message": "ARIS AI Engine is running"}
@@ -73,6 +88,35 @@ async def simulate(data: SimulationData):
 async def adapt(data: AdaptationData):
     try:
         result = detect_and_adapt(data.user_data, data.behavior_data)
+        return {"status": "success", "data": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/ai/calculate-burnout")
+async def burnout(data: BurnoutData):
+    try:
+        result = calculate_burnout_status(data.dict())
+        return {"status": "success", "data": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/ai/optimize-plan")
+async def optimize(data: OptimizationInput):
+    try:
+        result = optimize_recovery_plan(
+            data.sorted_tasks, 
+            data.burnout_data, 
+            data.available_days, 
+            data.max_daily_hours
+        )
+        return {"status": "success", "data": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/ai/coach")
+async def coach(data: CoachInput):
+    try:
+        result = get_ai_advice(data.stress_level, data.days_to_exam)
         return {"status": "success", "data": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
