@@ -1,26 +1,74 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F8FAFC;
+  --foreground: #1E293B;
+  
+  --primary-blue: #2563EB;
+  --primary-hover: #1D4ED8;
+  --light-tint: #DBEAFE;
+  
+  --accent-gradient-start: #2563EB;
+  --accent-gradient-end: #7C3AED;
+  
+  --bg-alt: #EEF2FF;
+  
+  --status-success: #22C55E;
+  --status-success-light: #DCFCE7;
+  --status-warning: #F59E0B;
+  --status-warning-light: #FEF3C7;
+  --status-critical: #EF4444;
+  --status-critical-light: #FEE2E2;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  
+  --color-primary-blue: var(--primary-blue);
+  --color-primary-hover: var(--primary-hover);
+  --color-light-tint: var(--light-tint);
+  
+  --color-success: var(--status-success);
+  --color-success-light: var(--status-success-light);
+  --color-warning: var(--status-warning);
+  --color-warning-light: var(--status-warning-light);
+  --color-critical: var(--status-critical);
+  --color-critical-light: var(--status-critical-light);
+  
+  --font-sans: "Inter", var(--font-geist-sans);
+  
+  --animate-fade-in: fade-in 0.3s ease-out;
+  
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-sm border border-black/[0.04] shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1;
+    border-radius: 16px;
+  }
+  
+  .accent-gradient {
+    background: linear-gradient(135deg, var(--accent-gradient-start) 0%, var(--accent-gradient-end) 100%);
+  }
+  
+  .sidebar-container {
+    @apply bg-white border-r border-gray-100 rounded-r-3xl;
+  }
+  
+  .active-nav-item {
+    @apply bg-blue-50 text-primary-blue;
+  }
 }
