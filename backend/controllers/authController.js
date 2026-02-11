@@ -27,6 +27,7 @@ exports.register = async (req, res) => {
 
         sendTokenResponse(user, 201, res);
     } catch (error) {
+        console.error('Register Error:', error);
         res.status(500).json({
             success: false,
             message: error.message,
@@ -52,6 +53,7 @@ exports.login = async (req, res) => {
         // Check for user
         const user = await User.findOne({ email }).select('+password');
         if (!user) {
+            console.log(`Login Failed: User not found for email ${email}`);
             return res.status(401).json({
                 success: false,
                 message: 'Invalid credentials',
@@ -61,6 +63,7 @@ exports.login = async (req, res) => {
         // Check if password matches
         const isMatch = await user.matchPassword(password);
         if (!isMatch) {
+            console.log(`Login Failed: Password mismatch for email ${email}`);
             return res.status(401).json({
                 success: false,
                 message: 'Invalid credentials',
@@ -69,6 +72,7 @@ exports.login = async (req, res) => {
 
         sendTokenResponse(user, 200, res);
     } catch (error) {
+        console.error('Login Error:', error);
         res.status(500).json({
             success: false,
             message: error.message,
