@@ -4,16 +4,18 @@ A stress-aware academic recovery planning system that helps students get back on
 
 ## Features
 
-- 🎯 **Priority Scoring**: Automatically calculates task urgency based on deadlines and difficulty
-- 😰 **Stress-Aware Planning**: Adjusts daily workload based on your stress level
+- 🎯 **Priority Scoring**: Automatically calculates task urgency using a custom AI formula
+- 😰 **Stress-Aware Planning**: Adjusts daily workload based on real-time stress levels
 - 📅 **Smart Scheduling**: Generates realistic study sessions with breaks
-- 🔄 **Adaptive Re-planning**: Automatically adjusts plans as you complete tasks
-- 📊 **Progress Tracking**: Visual dashboard to monitor your recovery journey
+- 🔄 **Adaptive Re-planning**: AI-powered adjustments based on completion trends
+- 📊 **Risk Assessment**: Real-time prediction of failure/burnout risk using ML
+- 📉 **Visual Analytics**: Interactive dashboard to monitor your recovery path
 
 ## Tech Stack
 
 - **Frontend**: Next.js 16, TypeScript, Tailwind CSS
 - **Backend**: Node.js, Express, MongoDB
+- **AI Engine**: Python, FastAPI, Scikit-learn, Pandas
 - **Authentication**: JWT
 - **Charts**: Recharts
 
@@ -34,8 +36,11 @@ cd Lets_Plot
 
 2. **Install dependencies**:
 ```bash
-# Backend
+# Backend (Node.js)
 cd backend && npm install
+
+# AI Engine (Python)
+cd backend && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
 
 # Frontend
 cd ../frontend && npm install
@@ -54,10 +59,13 @@ sudo systemctl start mongod
 
 5. **Run the application**:
 ```bash
-# Terminal 1: Backend
+# Terminal 1: Node.js Backend
 cd backend && npm run dev
 
-# Terminal 2: Frontend
+# Terminal 2: Python AI Engine
+cd backend && source venv/bin/activate && uvicorn main:app --reload --port 8000
+
+# Terminal 3: Next.js Frontend
 cd frontend && npm run dev
 ```
 
