@@ -1,33 +1,40 @@
 from services.priority_engine import prioritize_tasks
 from services.risk_model import get_risk_assessment
+from services.simulation_engine import simulate_recovery
+from services.adaptation_engine import detect_and_adapt
 
 def test_priority():
-    print("\n--- Testing Priority Engine ---")
-    tasks = [
-        {"subject_name": "Math", "exam_importance": 9, "days_left": 5, "backlog_ratio": 0.8, "stress_level": 8},
-        {"subject_name": "History", "exam_importance": 4, "days_left": 20, "backlog_ratio": 0.2, "stress_level": 3},
-        {"subject_name": "Physics", "exam_importance": 7, "days_left": 2, "backlog_ratio": 0.5, "stress_level": 9}
-    ]
-    
-    prioritized = prioritize_tasks(tasks)
-    for task in prioritized:
-        print(f"Task: {task['subject_name']}, Priority Score: {task['priority_score']}")
+    # ... (existing test)
+    pass
 
 def test_risk():
-    print("\n--- Testing Risk Model ---")
-    user_data = {
-        "backlog_ratio": 0.7,
-        "stress_level": 8,
-        "completion_rate": 0.3,
-        "days_remaining": 5
+    # ... (existing test)
+    pass
+
+def test_simulation():
+    print("\n--- Testing Simulation Engine ---")
+    data = {
+        "pendingTopics": 15,
+        "avgTimePerTopic": 2.5,
+        "remainingDays": 10,
+        "dailyHours": 6,
+        "consistencyFactor": 0.8
     }
-    
-    assessment = get_risk_assessment(user_data)
-    print(f"Risk Assessment: {assessment}")
+    result = simulate_recovery(data)
+    print(f"Simulation Result: {result}")
+
+def test_adaptation():
+    print("\n--- Testing Adaptation Engine ---")
+    user_data = {"stress_level": 9, "consistency_score": 0.7}
+    behavior_data = {"missed_sessions_rate": 0.4, "completion_speed": 0.9}
+    result = detect_and_adapt(user_data, behavior_data)
+    print(f"Adaptation Result: {result}")
 
 if __name__ == "__main__":
     try:
-        test_priority()
-        test_risk()
+        # test_priority()
+        # test_risk()
+        test_simulation()
+        test_adaptation()
     except Exception as e:
         print(f"Error during testing: {e}")

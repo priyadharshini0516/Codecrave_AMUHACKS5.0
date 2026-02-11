@@ -124,13 +124,29 @@ exports.simulateRecovery = async (req, res) => {
         const closestDeadline = validDeadlines.length > 0 ? new Date(Math.min(...validDeadlines)) : new Date();
         const daysRemaining = Math.max(1, (closestDeadline - new Date()) / (1000 * 60 * 60 * 24));
 
-        const simResult = simulationEngine.simulateRecovery({
+        const simInput = {
             pendingTopics: totalPending,
-            avgTimePerTopic: 3, // Standard estimate
-            remainingDays: daysRemaining,
+            avgTimePerTopic: 3,
+            remainingDays: Math.round(daysRemaining),
             dailyHours: user.dailyAvailableHours || 6,
             consistencyFactor: user.consistency_score || 0.5
-        });
+        };
+
+        let simResult;
+        try {
+            const aiResponse = await axios.post(`${AI_ENGINE_URL}/ai/simulate-recovery`, simInput);
+            simResult = aiResponse.data.data;
+            simResult.isAI = true;
+        } catch (aiError) {
+            console.error('AI Simulation failed, falling back to JS engine:', aiError.message);
+            simResult = simulationEngine.simulateRecovery({
+                pendingTopics: totalPending,
+                avgTimePerTopic: 3,
+                remainingDays: daysRemaining,
+                dailyHours: user.dailyAvailableHours || 6,
+                consistencyFactor: user.consistency_score || 0.5
+            });
+        }
 
         await RecoveryModel.findOneAndUpdate(
             { user: req.user.id },
@@ -214,10 +230,27 @@ exports.adaptiveRecalculate = async (req, res) => {
 
         const missedRate = logs.reduce((sum, l) => sum + l.missed_sessions, 0) / logs.length / 5;
 
-        const adaptations = adaptationEngine.detectAndAdapt(user, {
-            missed_sessions_rate: missedRate,
-            completion_speed: user.consistency_score > 0 ? 1.1 : 0.8
-        });
+        let adaptations;
+        try {
+            const aiInput = {
+                user_data: {
+                    stress_level: user.stressLevel || 5,
+                    consistency_score: user.consistency_score || 0
+                },
+                behavior_data: {
+                    missed_sessions_rate: missedRate,
+                    completion_speed: user.consistency_score > 0 ? 1.1 : 0.8
+                }
+            };
+            const aiResponse = await axios.post(`${AI_ENGINE_URL}/ai/detect-adaptations`, aiInput);
+            adaptations = aiResponse.data.data;
+        } catch (aiError) {
+            console.error('AI Adaptation failed, falling back to JS engine:', aiError.message);
+            adaptations = adaptationEngine.detectAndAdapt(user, {
+                missed_sessions_rate: missedRate,
+                completion_speed: user.consistency_score > 0 ? 1.1 : 0.8
+            });
+        }
 
         res.status(200).json({ success: true, data: adaptations });
     } catch (error) {

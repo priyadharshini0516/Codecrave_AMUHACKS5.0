@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from typing import List, Optional
 from services.priority_engine import prioritize_tasks
 from services.risk_model import get_risk_assessment
+from services.simulation_engine import simulate_recovery
+from services.adaptation_engine import detect_and_adapt
 import uvicorn
 
 app = FastAPI(title="Personalized Academic Recovery AI Engine")
@@ -24,6 +26,17 @@ class UserRiskData(BaseModel):
     completion_rate: float
     days_remaining: int
 
+class SimulationData(BaseModel):
+    pendingTopics: int
+    avgTimePerTopic: float
+    remainingDays: int
+    dailyHours: float
+    consistencyFactor: float
+
+class AdaptationData(BaseModel):
+    user_data: dict
+    behavior_data: dict
+
 @app.get("/")
 async def root():
     return {"message": "ARIS AI Engine is running"}
@@ -31,7 +44,6 @@ async def root():
 @app.post("/ai/prioritize")
 async def prioritize(data: TaskList):
     try:
-        # Convert Pydantic models to dicts for the service
         tasks_dict = [t.dict() for t in data.tasks]
         prioritized = prioritize_tasks(tasks_dict)
         return {"status": "success", "tasks": prioritized}
@@ -43,6 +55,22 @@ async def predict_risk(data: UserRiskData):
     try:
         assessment = get_risk_assessment(data.dict())
         return {"status": "success", "assessment": assessment}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/ai/simulate-recovery")
+async def simulate(data: SimulationData):
+    try:
+        result = simulate_recovery(data.dict())
+        return {"status": "success", "data": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/ai/detect-adaptations")
+async def adapt(data: AdaptationData):
+    try:
+        result = detect_and_adapt(data.user_data, data.behavior_data)
+        return {"status": "success", "data": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
