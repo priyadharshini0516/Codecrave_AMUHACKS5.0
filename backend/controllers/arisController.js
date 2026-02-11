@@ -2,14 +2,17 @@ const User = require('../models/User');
 const Subject = require('../models/Subject');
 const DailyLog = require('../models/DailyLog');
 const RecoveryModel = require('../models/RecoveryModel');
+const axios = require('axios');
 
-// Import Engines
+// Import Engines (kept as fallback)
 const riskEngine = require('../engines/riskEngine');
 const simulationEngine = require('../engines/simulationEngine');
 const optimizationEngine = require('../engines/optimizationEngine');
 const adaptationEngine = require('../engines/adaptationEngine');
 const gpsEngine = require('../engines/gpsEngine');
 const aiSystem = require('../utils/aiSystem');
+
+const AI_ENGINE_URL = process.env.AI_ENGINE_URL || 'http://localhost:8000';
 
 // @desc    Calculate Academic Risk Score
 // @route   POST /api/aris/calculate-risk
@@ -43,13 +46,40 @@ exports.calculateRisk = async (req, res) => {
         const closestDeadline = validDeadlines.length > 0 ? new Date(Math.min(...validDeadlines)) : new Date();
         const daysRemaining = Math.max(1, (closestDeadline - new Date()) / (1000 * 60 * 60 * 24));
 
-        const riskData = riskEngine.calculateARS({
-            pendingTopics: totalTopics - completedTopics,
-            totalTopics: totalTopics || 1,
-            daysRemaining,
-            stressLevel: user.stressLevel || 5,
-            completionRate: user.consistency_score || 0
-        });
+        const riskInput = {
+            backlog_ratio: (totalTopics - completedTopics) / (totalTopics || 1),
+            stress_level: user.stressLevel || 5,
+            completion_rate: user.consistency_score || 0,
+            days_remaining: Math.round(daysRemaining)
+        };
+
+        let riskData;
+        try {
+            const aiResponse = await axios.post(`${AI_ENGINE_URL}/ai/predict-risk`, riskInput);
+            const assessment = aiResponse.data.assessment;
+
+            // Map AI response to the expected format
+            riskData = {
+                score: assessment.raw_score * 33 + 10, // Approximate score for UI
+                level: assessment.risk_level,
+                breakdown: {
+                    backlogFactor: riskInput.backlog_ratio * 10,
+                    urgencyFactor: (1 / daysRemaining) * 10,
+                    stressFactor: riskInput.stress_level,
+                    trendFactor: riskInput.completion_rate * 10
+                },
+                isAI: true
+            };
+        } catch (aiError) {
+            console.error('AI Risk Assessment failed, falling back to JS engine:', aiError.message);
+            riskData = riskEngine.calculateARS({
+                pendingTopics: totalTopics - completedTopics,
+                totalTopics: totalTopics || 1,
+                daysRemaining,
+                stressLevel: user.stressLevel || 5,
+                completionRate: user.consistency_score || 0
+            });
+        }
 
         // Store result in RecoveryModel
         await RecoveryModel.findOneAndUpdate(
@@ -129,10 +159,28 @@ exports.optimizeSchedule = async (req, res) => {
             });
         }
 
-        const schedule = optimizationEngine.optimizeSchedule(subjects, {
-            availableDailyHours: user.dailyAvailableHours || 6,
-            stressLevel: user.stressLevel || 5
-        });
+        let schedule;
+        try {
+            const aiInput = {
+                tasks: subjects.map(s => ({
+                    id: s._id,
+                    subject_name: s.name,
+                    exam_importance: s.importance || 5,
+                    days_left: Math.max(1, Math.round((new Date(s.deadline) - new Date()) / (1000 * 60 * 60 * 24))),
+                    backlog_ratio: (s.total_topics - s.completed_topics) / (s.total_topics || 1),
+                    stress_level: user.stressLevel || 5
+                }))
+            };
+
+            const aiResponse = await axios.post(`${AI_ENGINE_URL}/ai/prioritize`, aiInput);
+            schedule = aiResponse.data.tasks;
+        } catch (aiError) {
+            console.error('AI Optimization failed, falling back to JS engine:', aiError.message);
+            schedule = optimizationEngine.optimizeSchedule(subjects, {
+                availableDailyHours: user.dailyAvailableHours || 6,
+                stressLevel: user.stressLevel || 5
+            });
+        }
 
         await RecoveryModel.findOneAndUpdate(
             { user: req.user.id },
