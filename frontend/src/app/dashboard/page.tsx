@@ -97,7 +97,7 @@ export default function DashboardPage() {
             setNewSubject({
                 name: '',
                 deadline: '',
-                total_topics: 0,
+                total_topics: 1,
                 weightage: 3,
                 topics: [{ name: '', difficulty: 5, estimatedHours: 2 }],
             });

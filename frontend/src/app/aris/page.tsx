@@ -150,19 +150,19 @@ export default function ArisPage() {
                         <div>
                             <div className="flex justify-between mb-2">
                                 <span className="text-sm text-slate-400">Consistency Score</span>
-                                <span className="text-sm font-bold text-purple-400">{(user?.consistency_score * 100).toFixed(0)}%</span>
+                                <span className="text-sm font-bold text-purple-400">{((user?.consistency_score ?? 0) * 100).toFixed(0)}%</span>
                             </div>
                             <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-purple-500" style={{ width: `${user?.consistency_score * 100}%` }} />
+                                <div className="h-full bg-purple-500" style={{ width: `${(user?.consistency_score ?? 0) * 100}%` }} />
                             </div>
                         </div>
                         <div>
                             <div className="flex justify-between mb-2">
                                 <span className="text-sm text-slate-400">Stress Capacity</span>
-                                <span className="text-sm font-bold text-amber-400">{100 - user?.stressLevel * 10}%</span>
+                                <span className="text-sm font-bold text-amber-400">{100 - (user?.stressLevel ?? 0) * 10}%</span>
                             </div>
                             <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-amber-500" style={{ width: `${100 - user?.stressLevel * 10}%` }} />
+                                <div className="h-full bg-amber-500" style={{ width: `${Math.max(0, 100 - (user?.stressLevel ?? 0) * 10)}%` }} />
                             </div>
                         </div>
                         <div className="pt-4 border-t border-slate-800">
@@ -200,8 +200,8 @@ export default function ArisPage() {
                         ].map((node, i) => (
                             <div key={i} className="relative z-10 flex flex-col items-center flex-1">
                                 <div className={`w-24 h-24 rounded-full border-4 flex items-center justify-center transition-all duration-1000 ${node.status === 'COMPLETE' ? 'bg-cyan-500/20 border-cyan-500' :
-                                        node.status === 'IN_PROGRESS' ? 'bg-purple-500/20 border-purple-500 animate-pulse' :
-                                            'bg-slate-900 border-slate-800'
+                                    node.status === 'IN_PROGRESS' ? 'bg-purple-500/20 border-purple-500 animate-pulse' :
+                                        'bg-slate-900 border-slate-800'
                                     }`}>
                                     <span className="text-2xl">
                                         {node.status === 'COMPLETE' ? '✅' : i + 1}
