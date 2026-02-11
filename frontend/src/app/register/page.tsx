@@ -23,8 +23,6 @@ export default function RegisterPage() {
         setError('');
         setLoading(true);
 
-        console.log('Submitting registration with data:', formData);
-
         try {
             await register(formData);
             router.push('/dashboard');
