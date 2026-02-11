@@ -11,6 +11,19 @@ const SubjectSchema = new mongoose.Schema({
     required: [true, 'Please add a subject name'],
     trim: true,
   },
+  total_topics: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
+  completed_topics: {
+    type: Number,
+    default: 0,
+  },
+  weightage: {
+    type: Number,
+    default: 1, // 1 to 5 scale
+  },
   topics: [
     {
       name: {
