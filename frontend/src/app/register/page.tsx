@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
+import { Sparkles, ArrowRight, Mail, Lock, User, BrainCircuit, Clock } from 'lucide-react';
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -34,119 +36,138 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-                <div className="text-center mb-8">
-                    <h1 className="text-4xl font-bold text-gray-800 mb-2">Join PARE</h1>
-                    <p className="text-gray-600">Start your academic recovery journey</p>
+        <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-4 font-sans antialiased">
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100/30 rounded-full blur-[120px]"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-100/30 rounded-full blur-[120px]"></div>
+            </div>
+
+            <div className="w-full max-w-[480px] z-10 animate-fade-in py-10">
+                <div className="text-center mb-10">
+                    <div className="inline-flex items-center justify-center w-16 h-16 accent-gradient rounded-2xl shadow-xl shadow-blue-200 mb-6 group transition-transform hover:scale-110">
+                        <Sparkles className="text-white" size={32} />
+                    </div>
+                    <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 mb-2">Join PARE</h1>
+                    <p className="text-gray-500 font-medium">Initialize your academic recovery engine.</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
-                    <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                            Full Name
-                        </label>
-                        <input
-                            id="name"
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            required
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition text-gray-800"
-                            placeholder="John Doe"
-                        />
-                    </div>
-
-                    <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                            Email
-                        </label>
-                        <input
-                            id="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            required
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition text-gray-800"
-                            placeholder="your@email.com"
-                        />
-                    </div>
-
-                    <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                            Password
-                        </label>
-                        <input
-                            id="password"
-                            type="password"
-                            value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            required
-                            minLength={6}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition text-gray-800"
-                            placeholder="••••••••"
-                        />
-                    </div>
-
-                    <div>
-                        <label htmlFor="stressLevel" className="block text-sm font-medium text-gray-700 mb-2">
-                            Current Stress Level: {formData.stressLevel}/10
-                        </label>
-                        <input
-                            id="stressLevel"
-                            type="range"
-                            min="1"
-                            max="10"
-                            value={formData.stressLevel}
-                            onChange={(e) => setFormData({ ...formData, stressLevel: parseInt(e.target.value) })}
-                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                        />
-                        <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>Low</span>
-                            <span>High</span>
+                <div className="glass-card bg-white/80 backdrop-blur-xl p-10 border border-white shadow-2xl shadow-blue-900/5">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Full Name</label>
+                            <div className="relative group">
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-blue transition-colors" size={18} />
+                                <input
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    required
+                                    className="w-full bg-gray-50/50 border border-gray-100 px-11 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary-blue/20 focus:bg-white transition-all font-medium text-gray-900"
+                                    placeholder="John Doe"
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <div>
-                        <label htmlFor="dailyHours" className="block text-sm font-medium text-gray-700 mb-2">
-                            Daily Available Hours: {formData.dailyAvailableHours}h
-                        </label>
-                        <input
-                            id="dailyHours"
-                            type="range"
-                            min="1"
-                            max="16"
-                            value={formData.dailyAvailableHours}
-                            onChange={(e) => setFormData({ ...formData, dailyAvailableHours: parseInt(e.target.value) })}
-                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                        />
-                        <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>1h</span>
-                            <span>16h</span>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Email Address</label>
+                            <div className="relative group">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-blue transition-colors" size={18} />
+                                <input
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    required
+                                    className="w-full bg-gray-50/50 border border-gray-100 px-11 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary-blue/20 focus:bg-white transition-all font-medium text-gray-900"
+                                    placeholder="name@university.edu"
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-                            {error}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Secure Password</label>
+                            <div className="relative group">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-blue transition-colors" size={18} />
+                                <input
+                                    type="password"
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    required
+                                    minLength={6}
+                                    className="w-full bg-gray-50/50 border border-gray-100 px-11 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary-blue/20 focus:bg-white transition-all font-medium text-gray-900"
+                                    placeholder="••••••••"
+                                />
+                            </div>
                         </div>
-                    )}
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {loading ? 'Creating Account...' : 'Create Account'}
-                    </button>
-                </form>
+                        <div className="grid grid-cols-1 gap-6 pt-2">
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center px-1">
+                                    <div className="flex items-center gap-2">
+                                        <BrainCircuit size={14} className="text-gray-400" />
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Stress Level</label>
+                                    </div>
+                                    <span className="text-sm font-bold text-primary-blue transition-all">{formData.stressLevel}/10</span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="1"
+                                    max="10"
+                                    value={formData.stressLevel}
+                                    onChange={(e) => setFormData({ ...formData, stressLevel: parseInt(e.target.value) })}
+                                    className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-primary-blue"
+                                />
+                            </div>
 
-                <p className="text-center mt-6 text-gray-600">
-                    Already have an account?{' '}
-                    <Link href="/login" className="text-purple-600 hover:text-purple-700 font-semibold">
-                        Login
-                    </Link>
-                </p>
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center px-1">
+                                    <div className="flex items-center gap-2">
+                                        <Clock size={14} className="text-gray-400" />
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Available Hours</label>
+                                    </div>
+                                    <span className="text-sm font-bold text-primary-blue transition-all">{formData.dailyAvailableHours}h daily</span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="1"
+                                    max="16"
+                                    value={formData.dailyAvailableHours}
+                                    onChange={(e) => setFormData({ ...formData, dailyAvailableHours: parseInt(e.target.value) })}
+                                    className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-primary-blue"
+                                />
+                            </div>
+                        </div>
+
+                        {error && (
+                            <div className="bg-critical/5 border border-critical/10 text-critical px-4 py-3 rounded-xl text-xs font-semibold animate-fade-in">
+                                {error}
+                            </div>
+                        )}
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full accent-gradient text-white py-4 rounded-xl font-bold shadow-xl shadow-blue-200 flex items-center justify-center gap-2 group transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100"
+                        >
+                            {loading ? (
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            ) : (
+                                <>
+                                    <span>Create Recovery Account</span>
+                                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
+                        </button>
+                    </form>
+
+                    <div className="mt-8 pt-8 border-t border-gray-50 text-center">
+                        <p className="text-sm text-gray-500 font-medium">
+                            Already have an account?{' '}
+                            <Link href="/login" className="text-primary-blue font-bold hover:underline">
+                                Sign In
+                            </Link>
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     );
