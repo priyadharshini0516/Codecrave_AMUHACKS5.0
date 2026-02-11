@@ -321,10 +321,3 @@ function generateSchedule(subjects, stressLevel, dailyAvailableHours) {
 
     return schedule;
 }
-
-module.exports = {
-    generatePlan,
-    getActivePlan,
-    markSessionComplete,
-    regeneratePlan,
-};
