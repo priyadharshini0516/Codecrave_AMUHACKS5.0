@@ -9,6 +9,9 @@ interface User {
     email: string;
     stressLevel: number;
     dailyAvailableHours: number;
+    baseline_performance: number;
+    stress_profile: string;
+    consistency_score: number;
 }
 
 interface AuthContextType {

@@ -55,6 +55,8 @@ export default function DashboardPage() {
     const [newSubject, setNewSubject] = useState({
         name: '',
         deadline: '',
+        total_topics: 0,
+        weightage: 3,
         topics: [{ name: '', difficulty: 5, estimatedHours: 2 }],
     });
 
@@ -95,6 +97,8 @@ export default function DashboardPage() {
             setNewSubject({
                 name: '',
                 deadline: '',
+                total_topics: 0,
+                weightage: 3,
                 topics: [{ name: '', difficulty: 5, estimatedHours: 2 }],
             });
             fetchData();
@@ -241,6 +245,32 @@ export default function DashboardPage() {
                                         required
                                         className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 outline-none text-gray-800"
                                     />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Total Topics</label>
+                                        <input
+                                            type="number"
+                                            value={newSubject.total_topics}
+                                            onChange={(e) => setNewSubject({ ...newSubject, total_topics: parseInt(e.target.value) })}
+                                            required
+                                            min="1"
+                                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 outline-none text-gray-800"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Priority Weight (1-5)</label>
+                                        <input
+                                            type="number"
+                                            value={newSubject.weightage}
+                                            onChange={(e) => setNewSubject({ ...newSubject, weightage: parseInt(e.target.value) })}
+                                            required
+                                            min="1"
+                                            max="5"
+                                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 outline-none text-gray-800"
+                                        />
+                                    </div>
                                 </div>
 
                                 <div>
