@@ -5,6 +5,9 @@ from services.priority_engine import prioritize_tasks
 from services.risk_model import get_risk_assessment
 from services.simulation_engine import simulate_recovery
 from services.adaptation_engine import detect_and_adapt
+from services.burnout_engine import calculate_burnout_status
+from services.plan_optimizer import optimize_recovery_plan
+from services.ai_coach import get_ai_advice
 import uvicorn
 
 app = FastAPI(title="Personalized Academic Recovery AI Engine")
