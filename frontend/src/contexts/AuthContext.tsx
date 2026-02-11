@@ -12,6 +12,7 @@ interface User {
     baseline_performance: number;
     stress_profile: string;
     consistency_score: number;
+    createdAt?: string;
 }
 
 interface AuthContextType {
@@ -21,6 +22,8 @@ interface AuthContextType {
     register: (data: any) => Promise<void>;
     logout: () => void;
     loading: boolean;
+    setUser: (user: User | null) => void;
+    fetchUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -75,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, token, login, register, logout, loading, setUser, fetchUser }}>
             {children}
         </AuthContext.Provider>
     );

@@ -9,6 +9,7 @@ const simulationEngine = require('../engines/simulationEngine');
 const optimizationEngine = require('../engines/optimizationEngine');
 const adaptationEngine = require('../engines/adaptationEngine');
 const gpsEngine = require('../engines/gpsEngine');
+const aiSystem = require('../utils/aiSystem');
 
 // @desc    Calculate Academic Risk Score
 // @route   POST /api/aris/calculate-risk
@@ -184,6 +185,46 @@ exports.getRecoveryPath = async (req, res) => {
         const recoveryData = await RecoveryModel.findOne({ user: req.user.id });
         res.status(200).json({ success: true, data: recoveryData });
     } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// @desc    Get AI-powered Recovery Insights
+// @route   GET /api/aris/ai-insights
+// @access  Private
+exports.getAIInsights = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        const subjects = await Subject.find({ user: req.user.id });
+
+        if (subjects.length === 0) {
+            return res.status(200).json({
+                success: true,
+                data: "Add some subjects first, and I'll analyze your path to recovery!"
+            });
+        }
+
+        const totalTopics = subjects.reduce((sum, s) => sum + s.total_topics, 0);
+        const completedTopics = subjects.reduce((sum, s) => sum + s.completed_topics, 0);
+        const completionRate = totalTopics > 0 ? completedTopics / totalTopics : 0;
+
+        const validDeadlines = subjects.map(s => new Date(s.deadline)).filter(d => !isNaN(d.getTime()));
+        const closestDeadline = validDeadlines.length > 0 ? new Date(Math.min(...validDeadlines)) : new Date();
+        const daysRemaining = Math.max(0, (closestDeadline - new Date()) / (1000 * 60 * 60 * 24));
+
+        const insight = await aiSystem.generateStudyInsight({
+            subjects: subjects.map(s => ({ name: s.name, progress: `${s.completed_topics}/${s.total_topics}` })),
+            stressLevel: user.stressLevel || 5,
+            completionRate,
+            daysRemaining
+        });
+
+        res.status(200).json({
+            success: true,
+            data: insight
+        });
+    } catch (error) {
+        console.error('AI Insight Error:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };

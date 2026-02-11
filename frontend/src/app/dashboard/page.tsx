@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { subjectAPI, planAPI } from '@/lib/api';
+import { subjectAPI, planAPI, arisAPI } from '@/lib/api';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
     DashboardCard,
@@ -69,6 +69,7 @@ export default function DashboardPage() {
     const { user, loading: authLoading } = useAuth();
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [plan, setPlan] = useState<RecoveryPlan | null>(null);
+    const [aiInsight, setAiInsight] = useState<string>('AI is calculating your path...');
     const [loading, setLoading] = useState(true);
     const [showAddSubject, setShowAddSubject] = useState(false);
     const [newSubject, setNewSubject] = useState({
@@ -100,6 +101,15 @@ export default function DashboardPage() {
 
             if (planRes.status === 'fulfilled') {
                 setPlan(planRes.value.data.data);
+            }
+
+            // Fetch AI Insights
+            try {
+                const aiRes = await arisAPI.getAIInsights();
+                setAiInsight(aiRes.data.data);
+            } catch (error) {
+                console.error('Error fetching AI insights:', error);
+                setAiInsight('Could not load AI insights at this time.');
             }
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -451,10 +461,16 @@ export default function DashboardPage() {
                         <Sparkles className="mb-4" size={32} />
                         <h3 className="text-lg font-bold mb-2">AI Recovery Insight</h3>
                         <p className="text-sm text-blue-50 opacity-90 leading-relaxed font-medium">
-                            I've noticed your performance is highest in the mornings. I've adjusted tomorrow's schedule to tackle "Mathematics" complex topics at 9:00 AM.
+                            {aiInsight}
                         </p>
-                        <button className="w-full mt-6 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl text-sm font-bold transition-all">
-                            Review Logic
+                        <button
+                            onClick={() => {
+                                setAiInsight('AI is re-analyzing...');
+                                arisAPI.getAIInsights().then(res => setAiInsight(res.data.data)).catch(() => setAiInsight('Error refreshing insights.'));
+                            }}
+                            className="w-full mt-6 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl text-sm font-bold transition-all"
+                        >
+                            Refresh Analysis
                         </button>
                     </div>
                 </div>

@@ -42,6 +42,11 @@ export const subjectAPI = {
         api.put(`/subjects/${subjectId}/topics/${topicId}/complete`),
 };
 
+// ARIS API
+export const arisAPI = {
+    getAIInsights: () => api.get('/aris/ai-insights'),
+};
+
 // Plan API
 export const planAPI = {
     generate: () => api.post('/plans/generate'),
