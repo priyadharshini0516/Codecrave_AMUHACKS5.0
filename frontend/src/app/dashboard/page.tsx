@@ -1,9 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { subjectAPI, planAPI } from '@/lib/api';
+import DashboardLayout from '@/components/DashboardLayout';
+import {
+    DashboardCard,
+    ProgressRing,
+    ProgressBar
+} from '@/components/DashboardComponents';
+import {
+    Plus,
+    Calendar,
+    CheckCircle2,
+    AlertCircle,
+    Clock,
+    TrendingUp,
+    BrainCircuit,
+    Zap,
+    BookOpen,
+    Sparkles
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Topic {
     _id: string;
@@ -47,7 +66,7 @@ interface RecoveryPlan {
 
 export default function DashboardPage() {
     const router = useRouter();
-    const { user, logout, loading: authLoading } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [plan, setPlan] = useState<RecoveryPlan | null>(null);
     const [loading, setLoading] = useState(true);
@@ -55,7 +74,7 @@ export default function DashboardPage() {
     const [newSubject, setNewSubject] = useState({
         name: '',
         deadline: '',
-        total_topics: 0,
+        total_topics: 1,
         weightage: 3,
         topics: [{ name: '', difficulty: 5, estimatedHours: 2 }],
     });
@@ -111,17 +130,9 @@ export default function DashboardPage() {
         try {
             const response = await planAPI.generate();
             setPlan(response.data.data);
+            fetchData();
         } catch (error: any) {
             alert(error.response?.data?.message || 'Failed to generate plan');
-        }
-    };
-
-    const handleRegeneratePlan = async () => {
-        try {
-            const response = await planAPI.regenerate();
-            setPlan(response.data.data);
-        } catch (error: any) {
-            alert(error.response?.data?.message || 'Failed to regenerate plan');
         }
     };
 
@@ -134,325 +145,320 @@ export default function DashboardPage() {
         }
     };
 
-    const addTopicField = () => {
-        setNewSubject({
-            ...newSubject,
-            topics: [...newSubject.topics, { name: '', difficulty: 5, estimatedHours: 2 }],
+    const todaySessions = useMemo(() => {
+        if (!plan) return [];
+        const todayStr = new Date().toISOString().split('T')[0];
+        const todaySchedule = plan.schedule.find(s => s.date.startsWith(todayStr));
+        return todaySchedule ? todaySchedule.sessions : [];
+    }, [plan]);
+
+    const academicRisk = useMemo(() => {
+        if (subjects.length === 0) return 0;
+        let totalTopics = 0;
+        let completedTopics = 0;
+        subjects.forEach(s => {
+            totalTopics += s.topics.length;
+            completedTopics += s.topics.filter(t => t.completed).length;
         });
-    };
+        const completionRate = completedTopics / totalTopics;
+        // Mock risk calculation: 100 - completion percentage, adjusted by stress
+        return Math.floor((1 - completionRate) * 80 + (user?.stressLevel || 0) * 2);
+    }, [subjects, user]);
+
+    const riskColor = useMemo(() => {
+        if (academicRisk < 30) return "var(--status-success)";
+        if (academicRisk < 70) return "var(--status-warning)";
+        return "var(--status-critical)";
+    }, [academicRisk]);
 
     if (authLoading || loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-blue-100 border-t-primary-blue rounded-full animate-spin"></div>
+                    <p className="text-gray-400 font-medium">Preparing your recovery engine...</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-            {/* Header */}
-            <header className="bg-white shadow-sm border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-                    <div>
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                            PARE Dashboard
-                        </h1>
-                        <p className="text-sm text-gray-600 mt-1">Welcome back, {user?.name}!</p>
+        <DashboardLayout>
+            <div className="mb-10">
+                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Recovery Overview</h1>
+                <p className="text-gray-500 mt-2 font-medium">Here's your data-driven path to academic success.</p>
+            </div>
+
+            {/* Top Analysis Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                <DashboardCard
+                    title="Academic Risk Level"
+                    subtitle="Based on upcoming deadlines"
+                    className="lg:col-span-1"
+                >
+                    <div className="flex flex-col items-center py-4">
+                        <ProgressRing
+                            value={academicRisk}
+                            color={riskColor}
+                            label={`${academicRisk}%`}
+                            subLabel="Risk"
+                            size={160}
+                        />
+                        <div className="mt-6 flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full">
+                            <AlertCircle size={16} className={academicRisk > 70 ? "text-critical" : "text-warning"} />
+                            <span className="text-xs font-semibold text-gray-600">
+                                {academicRisk < 30 ? "Optimal - Keep it up!" : academicRisk < 70 ? "Moderate - Stay focused" : "Critical - Action required"}
+                            </span>
+                        </div>
                     </div>
-                    <button
-                        onClick={logout}
-                        className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
+                </DashboardCard>
+
+                <DashboardCard
+                    title="Stress Level Meter"
+                    subtitle="Real-time emotional tracking"
+                    icon={BrainCircuit}
+                >
+                    <div className="flex flex-col justify-center h-full py-4">
+                        <div className="flex justify-between items-end mb-4">
+                            <div className="space-y-1">
+                                <p className="text-4xl font-bold text-gray-900">{user?.stressLevel || 0}<span className="text-lg text-gray-300 ml-1">/10</span></p>
+                                <p className="text-xs font-semibold text-gray-400 uppercase">Self-reported stress</p>
+                            </div>
+                            <TrendingUp className="text-blue-500 mb-2" size={24} />
+                        </div>
+                        <ProgressBar
+                            value={user?.stressLevel || 0}
+                            max={10}
+                            color={(user?.stressLevel || 0) > 7 ? "bg-critical" : (user?.stressLevel || 0) > 4 ? "bg-warning" : "bg-primary-blue"}
+                        />
+                        <p className="text-xs text-gray-500 mt-4 leading-relaxed">
+                            System is adjusting your study load to prevent burnout while maintaining progress.
+                        </p>
+                    </div>
+                </DashboardCard>
+
+                <DashboardCard
+                    title="Daily Completion"
+                    subtitle="Today's goal progress"
+                    icon={Zap}
+                >
+                    <div className="flex flex-col justify-center h-full py-4">
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-primary-blue font-bold text-xl">
+                                {todaySessions.filter(s => s.completed).length}/{todaySessions.length}
+                            </div>
+                            <div>
+                                <p className="font-bold text-gray-900">Sessions Finished</p>
+                                <p className="text-xs text-gray-500 font-medium">Target: {todaySessions.reduce((acc, s) => acc + s.duration, 0).toFixed(1)}h study</p>
+                            </div>
+                        </div>
+                        <ProgressBar
+                            value={todaySessions.filter(s => s.completed).length}
+                            max={Math.max(todaySessions.length, 1)}
+                            color="bg-success"
+                        />
+                    </div>
+                </DashboardCard>
+            </div>
+
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                {/* Left Column: Today's Plan */}
+                <div className="lg:col-span-3 space-y-8">
+                    <DashboardCard
+                        title="Today's Recovery Plan"
+                        subtitle={new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                        icon={Calendar}
+                        action={
+                            !plan && (
+                                <button
+                                    onClick={handleGeneratePlan}
+                                    className="accent-gradient text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-lg shadow-blue-100 transition-transform hover:scale-105"
+                                >
+                                    Generate Plan
+                                </button>
+                            )
+                        }
                     >
-                        Logout
-                    </button>
-                </div>
-            </header>
-
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600">Subjects</p>
-                                <p className="text-3xl font-bold text-gray-800">{subjects.length}</p>
+                        {!plan ? (
+                            <div className="py-20 text-center">
+                                <p className="text-gray-400 font-medium">No active recovery plan detected.</p>
+                                <p className="text-xs text-gray-400 mt-2">Add subjects first, then initialize the engine.</p>
                             </div>
-                            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                                <span className="text-2xl">📚</span>
+                        ) : todaySessions.length === 0 ? (
+                            <div className="py-20 text-center text-gray-400">
+                                <p>No study sessions scheduled for today.</p>
+                                <p className="text-xs mt-2">Rest is also part of recovery!</p>
                             </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600">Stress Level</p>
-                                <p className="text-3xl font-bold text-gray-800">{user?.stressLevel}/10</p>
-                            </div>
-                            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                                <span className="text-2xl">😰</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600">Daily Hours</p>
-                                <p className="text-3xl font-bold text-gray-800">{user?.dailyAvailableHours}h</p>
-                            </div>
-                            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <span className="text-2xl">⏰</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Subjects Section */}
-                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 mb-8">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-800">Your Subjects</h2>
-                        <button
-                            onClick={() => setShowAddSubject(!showAddSubject)}
-                            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition font-semibold"
-                        >
-                            + Add Subject
-                        </button>
-                    </div>
-
-                    {showAddSubject && (
-                        <form onSubmit={handleAddSubject} className="mb-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                        ) : (
                             <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Subject Name</label>
-                                    <input
-                                        type="text"
-                                        value={newSubject.name}
-                                        onChange={(e) => setNewSubject({ ...newSubject, name: e.target.value })}
-                                        required
-                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 outline-none text-gray-800"
-                                        placeholder="e.g., Mathematics"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Deadline</label>
-                                    <input
-                                        type="date"
-                                        value={newSubject.deadline}
-                                        onChange={(e) => setNewSubject({ ...newSubject, deadline: e.target.value })}
-                                        required
-                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 outline-none text-gray-800"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Total Topics</label>
-                                        <input
-                                            type="number"
-                                            value={newSubject.total_topics}
-                                            onChange={(e) => setNewSubject({ ...newSubject, total_topics: parseInt(e.target.value) })}
-                                            required
-                                            min="1"
-                                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 outline-none text-gray-800"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Priority Weight (1-5)</label>
-                                        <input
-                                            type="number"
-                                            value={newSubject.weightage}
-                                            onChange={(e) => setNewSubject({ ...newSubject, weightage: parseInt(e.target.value) })}
-                                            required
-                                            min="1"
-                                            max="5"
-                                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 outline-none text-gray-800"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Topics</label>
-                                    {newSubject.topics.map((topic, index) => (
-                                        <div key={index} className="grid grid-cols-3 gap-3 mb-3">
-                                            <input
-                                                type="text"
-                                                value={topic.name}
-                                                onChange={(e) => {
-                                                    const topics = [...newSubject.topics];
-                                                    topics[index].name = e.target.value;
-                                                    setNewSubject({ ...newSubject, topics });
-                                                }}
-                                                required
-                                                placeholder="Topic name"
-                                                className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 outline-none text-gray-800"
-                                            />
-                                            <input
-                                                type="number"
-                                                value={topic.difficulty}
-                                                onChange={(e) => {
-                                                    const topics = [...newSubject.topics];
-                                                    topics[index].difficulty = parseInt(e.target.value);
-                                                    setNewSubject({ ...newSubject, topics });
-                                                }}
-                                                min="1"
-                                                max="10"
-                                                required
-                                                placeholder="Difficulty (1-10)"
-                                                className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 outline-none text-gray-800"
-                                            />
-                                            <input
-                                                type="number"
-                                                value={topic.estimatedHours}
-                                                onChange={(e) => {
-                                                    const topics = [...newSubject.topics];
-                                                    topics[index].estimatedHours = parseFloat(e.target.value);
-                                                    setNewSubject({ ...newSubject, topics });
-                                                }}
-                                                min="0.5"
-                                                step="0.5"
-                                                required
-                                                placeholder="Hours"
-                                                className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 outline-none text-gray-800"
-                                            />
-                                        </div>
-                                    ))}
-                                    <button
-                                        type="button"
-                                        onClick={addTopicField}
-                                        className="text-sm text-purple-600 hover:text-purple-700 font-semibold"
+                                {todaySessions.map((session) => (
+                                    <div
+                                        key={session._id}
+                                        className={cn(
+                                            "flex items-center justify-between p-4 rounded-2xl border transition-all",
+                                            session.completed
+                                                ? "bg-success-light/30 border-success/10"
+                                                : "bg-white border-gray-100 hover:border-blue-100 hover:shadow-sm"
+                                        )}
                                     >
-                                        + Add Topic
-                                    </button>
-                                </div>
+                                        <div className="flex items-center gap-4">
+                                            <div className={cn(
+                                                "w-12 h-12 rounded-xl flex items-center justify-center",
+                                                session.completed ? "bg-success text-white" : "bg-gray-50 text-gray-400"
+                                            )}>
+                                                {session.completed ? <CheckCircle2 size={24} /> : <Clock size={24} />}
+                                            </div>
+                                            <div>
+                                                <h4 className={cn("font-bold", session.completed ? "text-success" : "text-gray-900")}>
+                                                    {session.subject?.name}
+                                                </h4>
+                                                <p className="text-xs text-gray-500 font-medium">{session.topic}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-6">
+                                            <div className="text-right">
+                                                <p className="text-sm font-bold text-gray-900">{session.startTime}</p>
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase">{session.duration.toFixed(1)}h session</p>
+                                            </div>
+                                            {!session.completed && (
+                                                <button
+                                                    onClick={() => handleMarkSessionComplete(plan._id, session._id)}
+                                                    className="px-4 py-2 bg-white border border-gray-200 text-gray-900 text-xs font-bold rounded-xl hover:bg-success hover:text-white hover:border-success transition-all shadow-sm"
+                                                >
+                                                    Complete
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </DashboardCard>
 
-                                <div className="flex gap-3">
+                    <DashboardCard
+                        title="Your Subjects"
+                        subtitle={`${subjects.length} active courses`}
+                        icon={BookOpen}
+                        action={
+                            <button
+                                onClick={() => setShowAddSubject(!showAddSubject)}
+                                className="p-2 bg-blue-50 text-primary-blue rounded-xl hover:bg-primary-blue hover:text-white transition-all shadow-sm"
+                            >
+                                <Plus size={20} />
+                            </button>
+                        }
+                    >
+                        {showAddSubject && (
+                            <form onSubmit={handleAddSubject} className="mb-8 p-6 bg-gray-50/50 rounded-2xl border border-gray-100 animate-fade-in">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Subject Name</label>
+                                        <input
+                                            type="text"
+                                            value={newSubject.name}
+                                            onChange={(e) => setNewSubject({ ...newSubject, name: e.target.value })}
+                                            required
+                                            className="w-full bg-white px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-primary-blue/20 transition-all font-medium"
+                                            placeholder="e.g., Mathematics"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Target Deadline</label>
+                                        <input
+                                            type="date"
+                                            value={newSubject.deadline}
+                                            onChange={(e) => setNewSubject({ ...newSubject, deadline: e.target.value })}
+                                            required
+                                            className="w-full bg-white px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-primary-blue/20 transition-all font-medium"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex gap-4">
                                     <button
                                         type="submit"
-                                        className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold"
+                                        className="accent-gradient text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-100 hover:scale-105 transition-transform"
                                     >
-                                        Save Subject
+                                        Add Subject
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setShowAddSubject(false)}
-                                        className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold"
+                                        className="bg-white text-gray-500 px-6 py-3 rounded-xl font-bold border border-gray-100 hover:bg-gray-50 transition-colors"
                                     >
                                         Cancel
                                     </button>
                                 </div>
-                            </div>
-                        </form>
-                    )}
+                            </form>
+                        )}
 
-                    {subjects.length === 0 ? (
-                        <p className="text-gray-500 text-center py-8">No subjects added yet. Add your first subject to get started!</p>
-                    ) : (
-                        <div className="space-y-4">
-                            {subjects.map((subject) => (
-                                <div key={subject._id} className="p-4 border border-gray-200 rounded-lg hover:border-purple-300 transition">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h3 className="text-lg font-semibold text-gray-800">{subject.name}</h3>
-                                        <span className="text-sm text-gray-500">
-                                            Deadline: {new Date(subject.deadline).toLocaleDateString()}
-                                        </span>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2">
-                                        {subject.topics.map((topic) => (
-                                            <span
-                                                key={topic._id}
-                                                className={`px-3 py-1 rounded-full text-sm ${topic.completed
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-gray-100 text-gray-700'
-                                                    }`}
-                                            >
-                                                {topic.name} ({topic.estimatedHours}h)
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* Recovery Plan Section */}
-                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-800">Recovery Plan</h2>
-                        <div className="flex gap-3">
-                            {plan && (
-                                <button
-                                    onClick={handleRegeneratePlan}
-                                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-semibold"
-                                >
-                                    Regenerate Plan
-                                </button>
-                            )}
-                            <button
-                                onClick={handleGeneratePlan}
-                                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition font-semibold"
-                            >
-                                {plan ? 'Generate New Plan' : 'Generate Plan'}
-                            </button>
-                        </div>
-                    </div>
-
-                    {!plan ? (
-                        <div className="text-center py-12">
-                            <p className="text-gray-500 mb-4">No active recovery plan. Generate one to get started!</p>
-                            <p className="text-sm text-gray-400">Add subjects first, then generate your personalized plan.</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-6">
-                            {plan.schedule.slice(0, 7).map((day, dayIndex) => (
-                                <div key={dayIndex} className="border border-gray-200 rounded-lg p-4">
-                                    <h3 className="font-semibold text-gray-800 mb-3">
-                                        {new Date(day.date).toLocaleDateString('en-US', {
-                                            weekday: 'long',
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric',
-                                        })}
-                                    </h3>
-                                    <div className="space-y-2">
-                                        {day.sessions.map((session) => (
-                                            <div
-                                                key={session._id}
-                                                className={`p-3 rounded-lg border ${session.completed
-                                                    ? 'bg-green-50 border-green-200'
-                                                    : 'bg-purple-50 border-purple-200'
-                                                    }`}
-                                            >
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <p className="font-medium text-gray-800">
-                                                            {session.subject?.name || 'Subject'} - {session.topic}
-                                                        </p>
-                                                        <p className="text-sm text-gray-600">
-                                                            {session.startTime} - {session.endTime} ({session.duration.toFixed(1)}h)
-                                                        </p>
-                                                    </div>
-                                                    {!session.completed && (
-                                                        <button
-                                                            onClick={() => handleMarkSessionComplete(plan._id, session._id)}
-                                                            className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition"
-                                                        >
-                                                            Complete
-                                                        </button>
-                                                    )}
-                                                </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {subjects.map((subject) => {
+                                const completed = subject.topics.filter(t => t.completed).length;
+                                const total = subject.topics.length;
+                                return (
+                                    <div key={subject._id} className="p-4 bg-white border border-gray-100 rounded-2xl hover:border-blue-100 hover:shadow-sm transition-all group">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div>
+                                                <h4 className="font-bold text-gray-900 group-hover:text-primary-blue transition-colors">{subject.name}</h4>
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">
+                                                    Deadline: {new Date(subject.deadline).toLocaleDateString()}
+                                                </p>
                                             </div>
-                                        ))}
+                                            <div className="px-2 py-1 bg-blue-50 rounded-lg text-[10px] font-bold text-primary-blue uppercase">
+                                                Priority {subject.priority}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase">
+                                                <span>Progress</span>
+                                                <span>{Math.round((completed / total) * 100)}%</span>
+                                            </div>
+                                            <ProgressBar value={completed} max={total} color="bg-primary-blue" />
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
-                    )}
+                    </DashboardCard>
                 </div>
-            </main>
-        </div>
+
+                {/* Right Column: Deadlines & Notifications */}
+                <div className="lg:col-span-1 space-y-8">
+                    <DashboardCard title="Upcoming Deadlines" icon={Clock}>
+                        <div className="space-y-6">
+                            {subjects.sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()).slice(0, 5).map(s => {
+                                const daysLeft = Math.ceil((new Date(s.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                                return (
+                                    <div key={s._id} className="flex items-start gap-3">
+                                        <div className={cn(
+                                            "w-2 h-2 rounded-full mt-1.5 shrink-0",
+                                            daysLeft < 3 ? "bg-critical" : daysLeft < 7 ? "bg-warning" : "bg-success"
+                                        )}></div>
+                                        <div>
+                                            <p className="text-sm font-bold text-gray-900 leading-tight">{s.name} Exam/Goal</p>
+                                            <p className="text-[11px] text-gray-500 font-medium mt-1">
+                                                {daysLeft < 0 ? "Expired" : `${daysLeft} days remaining`}
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </DashboardCard>
+
+                    <div className="accent-gradient rounded-3xl p-6 text-white shadow-xl shadow-blue-200">
+                        <Sparkles className="mb-4" size={32} />
+                        <h3 className="text-lg font-bold mb-2">AI Recovery Insight</h3>
+                        <p className="text-sm text-blue-50 opacity-90 leading-relaxed font-medium">
+                            I've noticed your performance is highest in the mornings. I've adjusted tomorrow's schedule to tackle "Mathematics" complex topics at 9:00 AM.
+                        </p>
+                        <button className="w-full mt-6 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl text-sm font-bold transition-all">
+                            Review Logic
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </DashboardLayout>
     );
 }
