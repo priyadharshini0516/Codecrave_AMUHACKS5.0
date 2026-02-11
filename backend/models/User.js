@@ -36,6 +36,19 @@ const UserSchema = new mongoose.Schema({
     min: 1,
     max: 16,
   },
+  baseline_performance: {
+    type: Number,
+    default: 70, // Percentage
+  },
+  stress_profile: {
+    type: String,
+    enum: ['Low', 'Moderate', 'High'],
+    default: 'Moderate',
+  },
+  consistency_score: {
+    type: Number,
+    default: 0.5, // 0 to 1
+  },
   createdAt: {
     type: Date,
     default: Date.now,
