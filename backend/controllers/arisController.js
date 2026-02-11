@@ -18,19 +18,36 @@ exports.calculateRisk = async (req, res) => {
         const user = await User.findById(req.user.id);
         const subjects = await Subject.find({ user: req.user.id });
 
+        if (subjects.length === 0) {
+            return res.status(200).json({
+                success: true,
+                data: {
+                    score: 0,
+                    level: 'Low',
+                    breakdown: {
+                        backlogFactor: 0,
+                        urgencyFactor: 0,
+                        stressFactor: 0,
+                        trendFactor: 0
+                    }
+                }
+            });
+        }
+
         const totalTopics = subjects.reduce((sum, s) => sum + s.total_topics, 0);
         const completedTopics = subjects.reduce((sum, s) => sum + s.completed_topics, 0);
 
         // Find closest deadline
-        const closestDeadline = new Date(Math.min(...subjects.map(s => new Date(s.deadline))));
+        const validDeadlines = subjects.map(s => new Date(s.deadline)).filter(d => !isNaN(d.getTime()));
+        const closestDeadline = validDeadlines.length > 0 ? new Date(Math.min(...validDeadlines)) : new Date();
         const daysRemaining = Math.max(1, (closestDeadline - new Date()) / (1000 * 60 * 60 * 24));
 
         const riskData = riskEngine.calculateARS({
             pendingTopics: totalTopics - completedTopics,
             totalTopics: totalTopics || 1,
             daysRemaining,
-            stressLevel: user.stressLevel,
-            completionRate: user.consistency_score
+            stressLevel: user.stressLevel || 5,
+            completionRate: user.consistency_score || 0
         });
 
         // Store result in RecoveryModel
@@ -58,16 +75,30 @@ exports.simulateRecovery = async (req, res) => {
         const user = await User.findById(req.user.id);
         const subjects = await Subject.find({ user: req.user.id });
 
+        if (subjects.length === 0) {
+            return res.status(200).json({
+                success: true,
+                data: {
+                    completionProbability: 0,
+                    requiredHours: 0,
+                    availableProductiveHours: 0,
+                    expectedCompletionDate: new Date(),
+                    isAtRisk: true
+                }
+            });
+        }
+
         const totalPending = subjects.reduce((sum, s) => sum + (s.total_topics - s.completed_topics), 0);
-        const closestDeadline = new Date(Math.min(...subjects.map(s => new Date(s.deadline))));
+        const validDeadlines = subjects.map(s => new Date(s.deadline)).filter(d => !isNaN(d.getTime()));
+        const closestDeadline = validDeadlines.length > 0 ? new Date(Math.min(...validDeadlines)) : new Date();
         const daysRemaining = Math.max(1, (closestDeadline - new Date()) / (1000 * 60 * 60 * 24));
 
         const simResult = simulationEngine.simulateRecovery({
             pendingTopics: totalPending,
             avgTimePerTopic: 3, // Standard estimate
             remainingDays: daysRemaining,
-            dailyHours: user.dailyAvailableHours,
-            consistencyFactor: user.consistency_score
+            dailyHours: user.dailyAvailableHours || 6,
+            consistencyFactor: user.consistency_score || 0.5
         });
 
         await RecoveryModel.findOneAndUpdate(
@@ -90,9 +121,16 @@ exports.optimizeSchedule = async (req, res) => {
         const user = await User.findById(req.user.id);
         const subjects = await Subject.find({ user: req.user.id });
 
+        if (subjects.length === 0) {
+            return res.status(200).json({
+                success: true,
+                data: []
+            });
+        }
+
         const schedule = optimizationEngine.optimizeSchedule(subjects, {
-            availableDailyHours: user.dailyAvailableHours,
-            stressLevel: user.stressLevel
+            availableDailyHours: user.dailyAvailableHours || 6,
+            stressLevel: user.stressLevel || 5
         });
 
         await RecoveryModel.findOneAndUpdate(
@@ -115,7 +153,17 @@ exports.adaptiveRecalculate = async (req, res) => {
         const user = await User.findById(req.user.id);
         const logs = await DailyLog.find({ user: req.user.id }).sort({ date: -1 }).limit(7);
 
-        const missedRate = logs.length > 0 ? logs.reduce((sum, l) => sum + l.missed_sessions, 0) / logs.length / 5 : 0;
+        if (logs.length === 0) {
+            return res.status(200).json({
+                success: true,
+                data: {
+                    recommendations: ['Keep going! Add your first daily log to get adaptive insights.'],
+                    adjustments: { dailyHours: user.dailyAvailableHours || 6 }
+                }
+            });
+        }
+
+        const missedRate = logs.reduce((sum, l) => sum + l.missed_sessions, 0) / logs.length / 5;
 
         const adaptations = adaptationEngine.detectAndAdapt(user, {
             missed_sessions_rate: missedRate,
