@@ -207,8 +207,9 @@ function calculatePriorities(subjects) {
     const now = new Date();
 
     return subjects.map((subject) => {
+        const subjectData = subject.toObject ? subject.toObject() : subject;
         const daysUntilDeadline = Math.ceil(
-            (new Date(subject.deadline) - now) / (1000 * 60 * 60 * 24)
+            (new Date(subjectData.deadline) - now) / (1000 * 60 * 60 * 24)
         );
 
         // Urgency: higher score for closer deadlines
@@ -216,14 +217,14 @@ function calculatePriorities(subjects) {
 
         // Difficulty: average difficulty of topics
         const avgDifficulty =
-            subject.topics.reduce((sum, topic) => sum + topic.difficulty, 0) /
-            subject.topics.length;
+            subjectData.topics.reduce((sum, topic) => sum + topic.difficulty, 0) /
+            subjectData.topics.length;
 
         // Priority = urgency * difficulty weight
         const priority = urgencyScore * (1 + avgDifficulty / 10);
 
         return {
-            ...subject,
+            ...subjectData,
             priority,
             urgencyScore,
             avgDifficulty,
@@ -282,10 +283,9 @@ function generateSchedule(subjects, stressLevel, dailyAvailableHours) {
 
             if (sessionDuration < 0.5) break; // Minimum 30 min session
 
-            const startTime = `${String(sessionStartHour).padStart(2, '0')}:00`;
+            const startTime = formatTime(sessionStartHour);
             const endHour = sessionStartHour + sessionDuration;
-            const endTime = `${String(Math.floor(endHour)).padStart(2, '0')}:${endHour % 1 === 0.5 ? '30' : '00'
-                }`;
+            const endTime = formatTime(endHour);
 
             sessions.push({
                 subject: task.subjectId,
@@ -320,4 +320,10 @@ function generateSchedule(subjects, stressLevel, dailyAvailableHours) {
     }
 
     return schedule;
+}
+
+function formatTime(decimalHours) {
+    const hours = Math.floor(decimalHours);
+    const minutes = Math.round((decimalHours - hours) * 60);
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }

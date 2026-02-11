@@ -334,8 +334,8 @@ export default function DashboardPage() {
                                             <span
                                                 key={topic._id}
                                                 className={`px-3 py-1 rounded-full text-sm ${topic.completed
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-gray-100 text-gray-700'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-gray-100 text-gray-700'
                                                     }`}
                                             >
                                                 {topic.name} ({topic.estimatedHours}h)
@@ -392,8 +392,8 @@ export default function DashboardPage() {
                                             <div
                                                 key={session._id}
                                                 className={`p-3 rounded-lg border ${session.completed
-                                                        ? 'bg-green-50 border-green-200'
-                                                        : 'bg-purple-50 border-purple-200'
+                                                    ? 'bg-green-50 border-green-200'
+                                                    : 'bg-purple-50 border-purple-200'
                                                     }`}
                                             >
                                                 <div className="flex justify-between items-start">
@@ -402,7 +402,7 @@ export default function DashboardPage() {
                                                             {session.subject?.name || 'Subject'} - {session.topic}
                                                         </p>
                                                         <p className="text-sm text-gray-600">
-                                                            {session.startTime} - {session.endTime} ({session.duration}h)
+                                                            {session.startTime} - {session.endTime} ({session.duration.toFixed(1)}h)
                                                         </p>
                                                     </div>
                                                     {!session.completed && (
