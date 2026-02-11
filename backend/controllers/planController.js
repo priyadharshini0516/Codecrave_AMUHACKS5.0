@@ -69,9 +69,9 @@ exports.getActivePlan = async (req, res) => {
         }).populate('schedule.sessions.subject');
 
         if (!plan) {
-            return res.status(404).json({
-                success: false,
-                message: 'No active plan found',
+            return res.status(200).json({
+                success: true,
+                data: null,
             });
         }
 
