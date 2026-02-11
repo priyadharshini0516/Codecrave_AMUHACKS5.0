@@ -97,12 +97,12 @@ export default function ArisPage() {
                     {/* Academic Risk Card */}
                     <DashboardCard
                         title="Academic Risk Model"
-                        icon={<AlertCircle className="text-critical" size={20} />}
+                        icon={AlertCircle}
                         className="flex flex-col"
                     >
                         <div className="flex-1 flex flex-col items-center justify-center py-6">
                             <ProgressRing
-                                progress={risk?.score || 0}
+                                value={risk?.score || 0}
                                 size={160}
                                 strokeWidth={12}
                                 color={riskColor}
@@ -124,7 +124,7 @@ export default function ArisPage() {
                                         <span className="font-bold text-gray-700">{value}pts</span>
                                     </div>
                                     <ProgressBar
-                                        progress={(value / 35) * 100}
+                                        value={(value / 35) * 100}
                                         color="#94A3B8"
                                         className="h-1"
                                     />
@@ -136,11 +136,11 @@ export default function ArisPage() {
                     {/* Completion Probability Card */}
                     <DashboardCard
                         title="Recovery Probability"
-                        icon={<Target className="text-primary-blue" size={20} />}
+                        icon={Target}
                     >
                         <div className="flex flex-col items-center justify-center py-6">
                             <ProgressRing
-                                progress={simulation?.completionProbability || 0}
+                                value={simulation?.completionProbability || 0}
                                 size={160}
                                 strokeWidth={12}
                                 color="#2563EB"
@@ -165,7 +165,7 @@ export default function ArisPage() {
                     {/* Behavioral Status Card */}
                     <DashboardCard
                         title="Behavioral Baseline"
-                        icon={<TrendingUp className="text-purple-500" size={20} />}
+                        icon={TrendingUp}
                     >
                         <div className="space-y-8 py-4">
                             <div className="space-y-3">
@@ -174,7 +174,7 @@ export default function ArisPage() {
                                     <span className="text-sm font-bold text-purple-600">{((user?.consistency_score ?? 0) * 100).toFixed(0)}%</span>
                                 </div>
                                 <ProgressBar
-                                    progress={(user?.consistency_score ?? 0) * 100}
+                                    value={(user?.consistency_score ?? 0) * 100}
                                     color="#A855F7"
                                     className="h-2.5"
                                 />
@@ -187,7 +187,7 @@ export default function ArisPage() {
                                     <span className="text-sm font-bold text-warning">{Math.max(0, 100 - (user?.stressLevel ?? 0) * 10)}%</span>
                                 </div>
                                 <ProgressBar
-                                    progress={Math.max(0, 100 - (user?.stressLevel ?? 0) * 10)}
+                                    value={Math.max(0, 100 - (user?.stressLevel ?? 0) * 10)}
                                     color="#F59E0B"
                                     className="h-2.5"
                                 />
