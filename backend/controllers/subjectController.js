@@ -1,4 +1,5 @@
 const Subject = require('../models/Subject');
+const arisService = require('../services/aris_service');
 
 // @desc    Get all subjects for logged in user
 // @route   GET /api/subjects
@@ -100,6 +101,11 @@ exports.updateSubject = async (req, res) => {
             runValidators: true,
         });
 
+        // Trigger ARIS recalculation if status or deadline changes
+        if (req.body.status || req.body.deadline || req.body.completed_topics) {
+            arisService.triggerRecalculation(req.user.id);
+        }
+
         res.status(200).json({
             success: true,
             data: subject,
@@ -181,6 +187,9 @@ exports.markTopicComplete = async (req, res) => {
         topic.completed = true;
         topic.completedAt = Date.now();
         await subject.save();
+
+        // Trigger ARIS recalculation
+        arisService.triggerRecalculation(req.user.id);
 
         res.status(200).json({
             success: true,
