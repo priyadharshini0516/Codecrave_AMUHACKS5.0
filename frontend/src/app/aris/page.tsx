@@ -284,7 +284,7 @@ export default function ArisPage() {
                                         </h3>
                                     </div>
                                     <div className="space-y-4">
-                                        {day.sessions.map((session: any, sIdx: number) => (
+                                        {day.sessions?.map((session: any, sIdx: number) => (
                                             <div key={sIdx} className="bg-white border border-gray-100 p-5 rounded-2xl hover:border-primary-blue/30 hover:shadow-lg hover:shadow-blue-500/5 transition-all group cursor-default ring-1 ring-inset ring-transparent hover:ring-primary-blue/10">
                                                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-tight mb-2">
                                                     <Clock size={12} />
@@ -298,7 +298,7 @@ export default function ArisPage() {
                                                 </div>
                                             </div>
                                         ))}
-                                        {day.sessions.length === 0 && (
+                                        {(!day.sessions || day.sessions.length === 0) && (
                                             <div className="p-8 border-2 border-dashed border-gray-50 rounded-[24px] text-center flex flex-col items-center justify-center gap-2">
                                                 <Clock size={20} className="text-gray-200" />
                                                 <p className="text-xs text-gray-300 font-bold uppercase tracking-widest">Buffer Period</p>
